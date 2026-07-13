@@ -19,6 +19,8 @@ try:
     bundle = load_bundle()
 except Exception as exc:
     st.error("Failed to load model artifact. Please check that model.pkl and dependencies are correct.")
+    st.caption(f"Error type: {type(exc).__name__}")
+    st.code(str(exc))
     st.stop()
 
 model = bundle["model"]
