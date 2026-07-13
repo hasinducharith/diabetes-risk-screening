@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
@@ -68,17 +67,17 @@ def preprocess(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     return x, y
 
 
-def build_preprocessor() -> ColumnTransformer:
+def build_preprocessor() -> Pipeline:
     numeric_pipe = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
             ("scaler", StandardScaler()),
         ]
     )
-    return ColumnTransformer(transformers=[("num", numeric_pipe, FEATURES)])
+    return numeric_pipe
 
 
-def build_models(preprocessor: ColumnTransformer) -> Dict[str, Pipeline]:
+def build_models(preprocessor: Pipeline) -> Dict[str, Pipeline]:
     return {
         "Logistic Regression": Pipeline(
             steps=[
