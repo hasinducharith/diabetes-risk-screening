@@ -2,18 +2,13 @@ import pickle
 
 import pandas as pd
 import streamlit as st
-import joblib
 
 st.set_page_config(page_title="Diabetes Risk Screening", page_icon="🩺", layout="centered")
 
 @st.cache_resource
 def load_bundle(path: str = "model.pkl"):
-    # Try joblib first because the notebook saves model.pkl with joblib.dump.
-    try:
-        return joblib.load(path)
-    except Exception:
-        with open(path, "rb") as f:
-            return pickle.load(f)
+    with open(path, "rb") as f:
+        return pickle.load(f)
 
 try:
     bundle = load_bundle()
