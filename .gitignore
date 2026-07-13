@@ -1,0 +1,7 @@
+.venv/
+.cache/
+.mplconfig/
+__pycache__/
+*.pyc
+.DS_Store
+run_logs/
