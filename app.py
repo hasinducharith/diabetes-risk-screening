@@ -21,6 +21,8 @@ except Exception as exc:
 model = bundle["model"]
 features = bundle["features"]
 model_name = bundle.get("model_name", "Trained Model")
+invalid_zero_columns = bundle.get("invalid_zero_columns", ["Glucose", "BloodPressure", "SkinThickness", "Insulin", "BMI"])
+fill_values = bundle.get("fill_values", {})
 
 st.title("Diabetes Risk Screening")
 st.write("Enter patient values below to estimate diabetes risk.")
@@ -52,6 +54,12 @@ if st.button("Predict Risk"):
         "Age": age,
     }
     x = pd.DataFrame([row])[features]
+    for col in invalid_zero_columns:
+        if col in x.columns:
+            x[col] = x[col].replace(0, pd.NA)
+    if fill_values:
+        x = x.fillna(fill_values)
+
     pred = int(model.predict(x)[0])
     prob = float(model.predict_proba(x)[0][1])
 

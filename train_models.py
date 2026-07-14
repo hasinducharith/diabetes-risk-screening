@@ -149,11 +149,12 @@ def save_artifacts(
     x_test: pd.DataFrame,
     y_test: pd.Series,
     model_probs: Dict[str, np.ndarray],
+    deployment_bundle: Dict[str, object],
 ) -> None:
     metrics_df.to_csv("model_metrics.csv", index=False)
 
     with open("model.pkl", "wb") as f:
-        pickle.dump({"model": best_model, "features": FEATURES, "model_name": best_name}, f)
+        pickle.dump(deployment_bundle, f)
 
     # Final model confusion matrix
     ConfusionMatrixDisplay.from_estimator(best_model, x_test, y_test)
@@ -214,7 +215,27 @@ def main() -> None:
     best_name = choose_best(metrics_df)
     best_model = fitted_models[best_name]
 
-    save_artifacts(metrics_df, best_name, best_model, x_test, y_test, model_probs)
+    # Build a deployment-safe artifact: plain estimator + explicit preprocessing values.
+    # This avoids cross-version issues when unpickling sklearn transformer internals on cloud.
+    rf_estimator = RandomForestClassifier(
+        n_estimators=300,
+        max_depth=6,
+        min_samples_leaf=2,
+        class_weight="balanced",
+        random_state=RANDOM_STATE,
+    )
+    fill_values = x_train.median(numeric_only=True).to_dict()
+    rf_estimator.fit(x_train.fillna(fill_values), y_train)
+
+    deployment_bundle = {
+        "model": rf_estimator,
+        "features": FEATURES,
+        "model_name": "Random Forest",
+        "invalid_zero_columns": INVALID_ZERO_COLUMNS,
+        "fill_values": fill_values,
+    }
+
+    save_artifacts(metrics_df, best_name, best_model, x_test, y_test, model_probs, deployment_bundle)
 
     print("Training complete.")
     print("Best model:", best_name)
